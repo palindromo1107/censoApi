@@ -1,0 +1,21 @@
+DROP TABLE IF EXISTS tb_instituicao_encino;
+
+CREATE TABLE tb_instituicao_encino (
+    id INTEGER PRIMARY KEY,
+    co_entidade INTEGER NOT NULL,
+    no_entidade TEXT NOT NULL,
+    no_uf TEXT NOT NULL,
+    sg_uf TEXT NOT NULL,
+    co_uf INTEGER NOT NULL,
+    no_municipio INTEGER NOT NULL,
+    co_municipio INTEGER NOT NULL,
+    nu_ano_censo INTEGER NOT NULL,
+    qt_mat_bas INTEGER NOT NULL,
+    qt_mat_inf INTEGER NOT NULL,
+    qt_mat_fund INTEGER NOT NULL,
+    qt_mat_med INTEGER NOT NULL,
+    qt_mat_prof INTEGER NOT NULL,
+    qt_mat_eja INTEGER NOT NULL,
+    qt_mat_esp INTEGER NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
