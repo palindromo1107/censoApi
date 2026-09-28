@@ -1,17 +1,14 @@
 from flask import Flask, request
 import helpers.files.fileEndpoint as helper
-from models.instituicaoEncino import InstituicaoEncino
+from models.instituicaoEncino import InstituicaoEnsino
 from helpers.database import getConn
-
-# TODO: GET BY ID PRONTO E ATUALIZAR
-# TODO: dbeaver
 
 def listar():
     # ler arquivo
-    data = helper.read("instituicoesEncino.json")
+    data = helper.read("instituicoesEnsino.json")
 
     # converter json -> ie
-    instituicoesEncino = [InstituicaoEncino(
+    instituicoesEnsino = [InstituicaoEncino(
             row["id"],
             row["co_entidade"],
             row["no_entidade"],
@@ -19,13 +16,13 @@ def listar():
         ).toDict() for row in data]
 
     # retornar lista
-    return instituicoesEncino
+    return instituicoesEnsino
 
 def salvar(data):
-    helper.update("instituicoesEncino.json", data)
+    helper.update("instituicoesEnsino.json", data)
 
 def buscarId(id):
-    dataset = helper.read("instituicoesEncino.json")
+    dataset = helper.read("instituicoesEnsino.json")
     instituicaoEscolhida = [ InstituicaoEncino(row["id"],row["co_entidade"],row["no_entidade"],row["qt_mat_bas"]) for row in dataset if str(row["id"]) == str(id)]
     
     return instituicaoEscolhida
@@ -41,54 +38,138 @@ def index():
 def health():
     return {"status": "OK"}, 200
 
-# ROTAS E METODOS
+# TODO: ROTAS E METODOS
 
-# GET / GET CO ENTIDADE
+# TODO: GET / GET CO ENTIDADE
 @app.get(IEs)
 def getAllInstituicoes():
-    insituicoesEnsino = listar()
+    # FAZER CONEXÃO
+    conn = getConn()
+
+    # ADQUIRIR CURSOR
+    cursor = conn.cursor()
+
+    # DEFINIR CONSULTA
+    cursor.execute('select * from tb_instituicao_encino')
+
+    # CONVERTER TABELA
+    data = cursor.fetchall()
+
+    # CONVERTER DADOS E CRIAR LISTA
+    instituicoesEnsino = [InstituicaoEnsino(row[0], row[1], row[2], row[9]) for row in data]
+
     co_entidade = request.args.get("co_entidade")
     if co_entidade is not None:
-        insituicoesEnsinoReponse = [ ie.toDict() for ie in insituicoesEnsino if ie.co_entidade == co_entidade ]
+        instituicoesEnsinoReponse = [ ie.toDict() for ie in instituicoesEnsino if ie.co_entidade == co_entidade ]
     else:
-        insituicoesEnsinoReponse = [ ie.toDict() for ie in insituicoesEnsino ]
+        instituicoesEnsinoReponse = [ ie.toDict() for ie in instituicoesEnsino ]
 
-    return insituicoesEnsinoReponse, 200
+    return instituicoesEnsinoReponse, 200
 
-# GET ID
+# TODO: GET ID
 @app.get(f"{IEs}/<int:id>")
 def getByIdInstituicoesEnsino(id):
-    traget = buscarId(id)
+    instituicao = None
+    conn = getConn()
+    
+    cursor = conn.cursor()
+    
+    cursor.execute('select * from tb_instituicao_encino where id = ?', (id,))
+    
+    data = cursor.fetchone()
+    
+    if data is not None:
+        instituicao = InstituicaoEnsino(data[0], data[1], data[2], data[9])
+        return instituicao.toDict(), 200
+    else:
+        return 'not found', 404
 
-    if id is not None:
-        instituicaoResponde = [ data.toDict() for data in traget if str(data.id) == str(id) ]   
-        return instituicaoResponde,200
-
-# POST
+# TODO: POST
 @app.post(f"{IEs}/post")
 def postData():
+    # TODO: ENTRADA DOS DADOS E VALIDAÇÃO
     data = request.get_json()
-    instituicoesEncino = listar()
-    instituicoesEncino.append({"id": data.get("id"), "nome": data.get("nome")})
-    salvar(instituicoesEncino)
-    return instituicoesEncino, 201
+    
+    coInep = data.get('co_inep')
+    
+    conn = getConn()
+    
+    cursor = conn.cursor()
+    
+    cursor.execute(
+        '''
+        INSERT INTO tb_instituicao_encino (
+            id,
+            co_entidade,
+            no_entidade,
+            no_uf,
+            sg_uf,
+            co_uf,
+            no_municipio,
+            co_municipio,
+            nu_ano_censo,
+            qt_mat_bas,
+            qt_mat_inf,
+            qt_mat_fund,
+            qt_mat_med,
+            qt_mat_prof,
+            qt_mat_eja,
+            qt_mat_esp
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''',
+        (
+            data["id"],
+            data["co_entidade"],
+            data["no_entidade"],
+            data["no_uf"],
+            data["sg_uf"],
+            data["co_uf"],
+            data["no_municipio"],
+            data["co_municipio"],
+            data["nu_ano_censo"],
+            data["qt_mat_bas"],
+            data["qt_mat_inf"],
+            data["qt_mat_fund"],
+            data["qt_mat_med"],
+            data["qt_mat_prof"],
+            data["qt_mat_eja"],
+            data["qt_mat_esp"]
+        )
+    )
 
-# DELETE
+    conn.commit()
+    
+    conn.close()
+    
+    return {'id': id, 'co_inep': coInep}, 201
+
+# TODO: DELETE
 @app.delete(f"{IEs}/delet")
-def deleteInstituicoesEncino():
+def deleteInstituicoesEnsino():
     id = request.json.get("id")
-    instituicoesEncino = listar()
-    data = buscarId(id, instituicoesEncino, False)
-    salvar(data)
+    
+    conn = getConn()
+
+    cursor = conn.cursor()
+    
+    cursor.execute('delete from tb_instituicao_encino where id = ?', (id,))
+    
+    data = cursor.fetchall()
+    
+    instituicoesEnsino = [InstituicaoEnsino(row[0], row[1], row[2], row[9]) for row in data]
+    
+    data = [ie.toDict() for ie in instituicoesEnsino]
+
     return data, 200
 
-# PUT
+# TODO: PUT
 @app.put(f"{IEs}/put")
-def putInstituicoesEncino():
-    instituicoesEncino = listar()
+def putInstituicoesEnsino():
+    instituicoesEnsino = listar()
     id = request.json.get("id")
     nome = request.json.get("nome")
-    data = buscarId(id, instituicoesEncino, False)
+    data = buscarId(id, instituicoesEnsino, False)
     data.append({"id": id, "nome": nome})
     salvar(data)
     return data, 201
@@ -98,14 +179,3 @@ def main(arg=[]):
 
 if __name__ == "__main__":
     main()
-
-
-"""
-instituicoesEncino = listar()
-    coEntidade = request.args.get("co_entidade")
-    if not coEntidade:
-        return instituicoesEncino, 200
-    else:
-        newInstituicoesEncino = [ie for ie in instituicoesEncino if ie["co_entidade"] == int(coEntidade)]
-        return newInstituicoesEncino
-"""

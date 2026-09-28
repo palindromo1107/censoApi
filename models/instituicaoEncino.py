@@ -1,4 +1,4 @@
-class InstituicaoEncino:
+class InstituicaoEnsino:
     def __init__ (self, id, co_entidade, no_entidade, qt_mat_bas):
 
         self.id = id
