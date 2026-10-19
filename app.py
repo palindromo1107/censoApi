@@ -1,30 +1,14 @@
 from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlite3 import OperationalError
+from helpers.logger import logger
 
 from models.instituicaoEncino import InstituicaoEnsino, InstituicaoEnsinoSchema
 from helpers.database import getConn
 from helpers.aplication import app
 
 def row_to_IE(row):
-    return InstituicaoEnsino(
-        row[0],
-        row[1],
-        row[2],
-        row[3],
-        row[4],
-        row[5],
-        row[6],
-        row[7],
-        row[8],
-        row[9],
-        row[10],
-        row[11],
-        row[12],
-        row[13],
-        row[14],
-        row[15]
-        )
+    return InstituicaoEnsino( row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14], row[15] )
 
 URL_BASE = "/instituicoesEnsino"
 
@@ -41,7 +25,9 @@ def health():
 # TODO: GET / GET CO ENTIDADE
 @app.get(URL_BASE)
 def getAllInstituicoes():
+    logger.info('INFO: Tentando conexão com o banco de dados')
     try:
+        logger.info('INFO: Buscando instituições de ensino')
         # FAZER CONEXÃO
         conn = getConn()
         
@@ -62,9 +48,10 @@ def getAllInstituicoes():
             instituicoesEnsinoReponse = [ ie.toDict() for ie in instituicoesEnsino if ie.co_entidade == co_entidade ]
         else:
             instituicoesEnsinoReponse = [ ie.toDict() for ie in instituicoesEnsino ]
-        
+        logger.info('INFO: Finalizando busca')
         return instituicoesEnsinoReponse, 200
     except OperationalError:
+        logger.error('ERROR: Erro de listagem')
         conn.rollback()
         raise
 
@@ -142,7 +129,7 @@ def deleteInstituicoesEnsino():
 
     cursor = conn.cursor()
     
-    cursor.execute('delete from tb_instituicao_encino where id = ?', (id,))
+    cursor.execute('UPDATE tb_instituicao_encinoSET deleted = CURRENT_TIMESTAMPWHERE id = ? AND deleted IS NULL',(id,))
     
     data = cursor.fetchall()
     
