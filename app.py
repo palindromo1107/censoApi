@@ -1,4 +1,4 @@
-from helpers.aplication import app
+from helpers.application import app
 from controllers.instituicaoEnsinoControler import instituicaoEnsino_bp
 
 app.register_blueprint(instituicaoEnsino_bp)

@@ -1,4 +1,4 @@
-from helpers.aplication import app
+from helpers.application import app
 
 @app.route("/")
 def index():

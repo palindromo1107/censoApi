@@ -1,8 +1,10 @@
 import sqlite3
 from flask import g
-from helpers.aplication import app
+from helpers.application import app
+from helpers.environment import environment
 
-DATABASE = 'censoescolar.db'
+DATABASE = environment.get("DB_NAME")
+
 def getConn():
     conn = sqlite3.connect(DATABASE)
     # conn.row_factory = sqlite3.Row

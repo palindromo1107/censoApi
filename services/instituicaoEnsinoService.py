@@ -1,44 +1,61 @@
-from helpers.database import getConn
 from helpers.logger import logger
-from models.instituicaoEncino import InstituicaoEnsino
-
-from flask import request
-from sqlite3 import OperationalError
+from models.instituicaoEncino import InstituicaoEnsinoSchema
+from repositories.institucaoEnsinoRepository import InstituicaoEnsinoRepository
 
 class InstituicaoEnsinoService:
+
     def __init__(self):
-        pass
-    
-    def row_to_IE(self, row):
-        return InstituicaoEnsino( row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14], row[15], row[16] )
+        self.repository = InstituicaoEnsinoRepository()
+        self.schema = InstituicaoEnsinoSchema()
 
-    def getAll(self):
-        logger.info('INFO: Tentando conexão com o banco de dados')
-        try:
-            logger.info('INFO: Buscando instituições de ensino')
-            # FAZER CONEXÃO
-            conn = getConn()
+    # TODO: GET
+    def get_all(self):
+        logger.info("Buscando instituições de ensino")
 
-            # ADQUIRIR CURSOR
-            cursor = conn.cursor()
+        return self.repository.getInstituicoes()
 
-            # DEFINIR CONSULTA
-            cursor.execute('select * from tb_instituicao_encino')
+    # TODO: GET ID
+    def get_by_id(self, id):
+        logger.info(f"Buscando instituição de ID {id}")
 
-            # CONVERTER TABELA
-            data = cursor.fetchall()
+        return self.repository.getInstituicao(id)
 
-            # CONVERTER DADOS E CRIAR LISTA
-            instituicoesEnsino = [self.row_to_IE(row) for row in data]
+    # TODO: POST
+    def postData(self, dados):
+        logger.info("Validando dados da instituição")
 
-            co_entidade = request.args.get("co_entidade")
-            if co_entidade is not None:
-                instituicoesEnsinoReponse = [ ie.toDict() for ie in instituicoesEnsino if ie.co_entidade == co_entidade ]
-            else:
-                instituicoesEnsinoReponse = [ ie.toDict() for ie in instituicoesEnsino ]
-            logger.info('INFO: Finalizando busca')
-            return instituicoesEnsinoReponse, 200
-        except OperationalError:
-            logger.error('ERROR: Erro de listagem')
-            conn.rollback()
-            raise
+        data = self.schema.load(dados)
+
+        instituicao = self.repository.postData(data)
+
+        logger.info("Instituição cadastrada com sucesso")
+
+        return instituicao
+
+    # TODO: DELETE
+    def deleteInstituicoesEnsino(self, id):
+        logger.info(f"Excluindo instituição de ID {id}")
+
+        instituicao = self.repository.deleteInstituicao(id)
+
+        if instituicao is None:
+            return None
+
+        logger.info("Instituição excluída com sucesso")
+
+        return instituicao
+
+    # PUT - Atualizar
+    def putInstituicoesEnsino(self, id, dados):
+        logger.info(f"Atualizando instituição de ID {id}")
+
+        data = self.schema.load(dados)
+
+        instituicao = self.repository.putData(id, data)
+
+        if instituicao is None:
+            return None
+
+        logger.info("Instituição atualizada com sucesso")
+
+        return instituicao

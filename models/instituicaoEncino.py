@@ -1,4 +1,4 @@
-from marshmallow import Schema
+from marshmallow import Schema, validate
 class InstituicaoEnsino:
     def __init__(
         self, id, co_entidade, no_entidade, no_uf, sg_uf,
@@ -83,3 +83,32 @@ class InstituicaoEnsinoSchema(Schema):
     qt_mat_prof = fields.Int(required=True)
     qt_mat_eja = fields.Int(required=True)
     qt_mat_esp = fields.Int(required=True)
+
+class InstituicaoEnsinoCompactoSchema(Schema):
+    no_entidade = fields.Str(
+        required=True,
+        validate=validate.Length(min=1, max=255)
+    )
+
+    co_entidade = fields.Str(
+        required=True,
+        validate=validate.Length(min=1)
+    )
+
+    co_uf = fields.Int(
+        required=True
+    )
+
+    co_municipio = fields.Int(
+        required=True
+    )
+
+    nu_ano_censo = fields.Int(
+        required=True,
+        validate=validate.Range(min=0)
+    )
+
+    qt_mat_bas = fields.Int(
+        required=True,
+        validate=validate.Range(min=0)
+    )
