@@ -1,5 +1,4 @@
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
+import psycopg2
 
 from helpers.database import getConnection
 from models.instituicaoEncino import InstituicaoEnsino
@@ -52,7 +51,7 @@ class InstituicaoEnsinoRepository:
 
             return instituicoesEnsino
 
-        except SQLAlchemyError:
+        except psycopg2.Error:
             connection.rollback()
             raise
         finally:
@@ -75,7 +74,7 @@ class InstituicaoEnsinoRepository:
 
             return self.row_to_IE(cursor.fetchone())
 
-        except SQLAlchemyError:
+        except psycopg2.Error:
             connection.rollback()
             raise
         finally:
@@ -119,7 +118,7 @@ class InstituicaoEnsinoRepository:
 
             return self.getInstituicao(cursor.lastrowid())
 
-        except SQLAlchemyError:
+        except psycopg2.Error:
             connection.rollback()
             raise
         finally:
@@ -154,7 +153,7 @@ class InstituicaoEnsinoRepository:
                 """, (id,)).fetchone()
             )
 
-        except SQLAlchemyError:
+        except psycopg2.Error:
             connection.rollback()
             raise
         finally:
@@ -211,7 +210,7 @@ class InstituicaoEnsinoRepository:
 
             return self.row_to_IE(cursor.fetchone())
 
-        except SQLAlchemyError:
+        except psycopg2.Error:
             connection.rollback()
             raise
         finally:
