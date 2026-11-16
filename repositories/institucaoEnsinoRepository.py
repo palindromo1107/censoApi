@@ -35,22 +35,20 @@ class InstituicaoEnsinoRepository:
 
         try:
             offset = (page - 1) * perPage
+            
+            cursor = connection.cursor()
 
-            resultado = connection.execute(
-                            text("""
+            cursor.execute("""
                                 SELECT id, no_entidade, co_entidade, no_uf, sg_uf, co_uf, 
                                 no_municipio, co_municipio, nu_ano_censo, qt_mat_bas, qt_mat_inf, 
                                 qt_mat_fund, qt_mat_med, qt_mat_prof, qt_mat_eja, qt_mat_esp, created
                                 FROM tb_instituicao_encino WHERE deleted IS NULL
-                                ORDER BY id LIMIT :perPage OFFSET :offset
-                            """),
-                            {
-                                "perPage": perPage,
-                                "offset": offset
-                            }
+                                ORDER BY id LIMIT %s OFFSET %s
+                            """,
+                            (perPage, offset)
                         )
 
-            instituicoesEnsino = [self.row_to_IE(row) for row in resultado.fetchall()]
+            instituicoesEnsino = [self.row_to_IE(row) for row in cursor.fetchall()]
 
             return instituicoesEnsino
 
@@ -64,16 +62,18 @@ class InstituicaoEnsinoRepository:
         connection = getConnection()
 
         try:
-            resultado  = connection.execute(text("""
+            cursor = connection.cursor()
+            
+            cursor.execute("""
                 SELECT id, no_entidade, co_entidade, no_uf, sg_uf,
                     co_uf, no_municipio, co_municipio, nu_ano_censo,
                     qt_mat_bas, qt_mat_inf, qt_mat_fund, qt_mat_med,
                     qt_mat_prof, qt_mat_eja, qt_mat_esp, created
                 FROM tb_instituicao_encino
-                WHERE id = :id AND deleted IS NULL
-            """), {"id": id})
+                WHERE id = %s AND deleted IS NULL
+            """, (id,))
 
-            return self.row_to_IE(resultado.fetchone())
+            return self.row_to_IE(cursor.fetchone())
 
         except SQLAlchemyError:
             connection.rollback()
@@ -85,42 +85,39 @@ class InstituicaoEnsinoRepository:
         connection = getConnection()
 
         try:
+            
+            cursor = connection.cursor()
 
-            resultado =  connection.execute(text("""
+            cursor.execute("""
                 INSERT INTO tb_instituicao_encino (
                     co_entidade, no_entidade, no_uf, sg_uf, co_uf,
                     no_municipio, co_municipio, nu_ano_censo,
                     qt_mat_bas, qt_mat_inf, qt_mat_fund, qt_mat_med,
                     qt_mat_prof, qt_mat_eja, qt_mat_esp
                 )
-                VALUES (
-                        :co_entidade, :no_entidade, :no_uf, :sg_uf,
-                        :co_uf, :no_municipio, :co_municipio,
-                        :nu_ano_censo, :qt_mat_bas, :qt_mat_inf,
-                        :qt_mat_fund, :qt_mat_med, :qt_mat_prof,
-                        :qt_mat_eja, :qt_mat_esp
-                    )
-            """), {
-                    'co_entidade': data['co_entidade'],
-                    'no_entidade': data['no_entidade'],
-                    'no_uf': data['no_uf'],
-                    'sg_uf': data['sg_uf'],
-                    'co_uf': data['co_uf'],
-                    'no_municipio': data['no_municipio'],
-                    'co_municipio': data['co_municipio'],
-                    'nu_ano_censo': data['nu_ano_censo'],
-                    'qt_mat_bas': data['qt_mat_bas'],
-                    'qt_mat_inf': data['qt_mat_inf'],
-                    'qt_mat_fund': data['qt_mat_fund'],
-                    'qt_mat_med': data['qt_mat_med'],
-                    'qt_mat_prof': data['qt_mat_prof'],
-                    'qt_mat_eja': data['qt_mat_eja'],
-                    'qt_mat_esp': data['qt_mat_esp'],
-                })
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+                (
+                    data['co_entidade'],
+                    data['no_entidade'],
+                    data['no_uf'],
+                    data['sg_uf'],
+                    data['co_uf'],
+                    data['no_municipio'],
+                    data['co_municipio'],
+                    data['nu_ano_censo'],
+                    data['qt_mat_bas'],
+                    data['qt_mat_inf'],
+                    data['qt_mat_fund'],
+                    data['qt_mat_med'],
+                    data['qt_mat_prof'],
+                    data['qt_mat_eja'],
+                    data['qt_mat_esp']
+                ))
 
             connection.commit()
 
-            return self.getInstituicao(resultado.lastrowid())
+            return self.getInstituicao(cursor.lastrowid())
 
         except SQLAlchemyError:
             connection.rollback()
@@ -132,27 +129,29 @@ class InstituicaoEnsinoRepository:
         connection = getConnection()
 
         try:
+            
+            cursor = connection.cursor()
 
-            resultado = connection.execute(text("""
+            cursor.execute("""
                 UPDATE tb_instituicao_encino
                 SET deleted = CURRENT_TIMESTAMP
-                WHERE id = :id AND deleted IS NULL
-            """), {"id": id})
+                WHERE id = %s AND deleted IS NULL
+            """, (id,))
 
-            if resultado.rowcount == 0:
+            if cursor.rowcount == 0:
                 return None
 
             connection.commit()
 
             return self.row_to_IE(
-                connection.execute(text("""
+                cursor.execute("""
                     SELECT id, no_entidade, co_entidade, no_uf, sg_uf,
                         co_uf, no_municipio, co_municipio, nu_ano_censo,
                         qt_mat_bas, qt_mat_inf, qt_mat_fund, qt_mat_med,
                         qt_mat_prof, qt_mat_eja, qt_mat_esp, created
                     FROM tb_instituicao_encino
-                    WHERE id = :id
-                """), {"id": id}).fetchone()
+                    WHERE id = %s
+                """, (id,)).fetchone()
             )
 
         except SQLAlchemyError:
@@ -165,59 +164,52 @@ class InstituicaoEnsinoRepository:
         connection = getConnection()
 
         try:
+            
+            cursor = connection.cursor()
 
-            resultado = connection.execute(text("""
+            cursor.execute("""
                 UPDATE tb_instituicao_encino
-                    SET co_entidade = :co_entidade,
-                        no_entidade = :no_entidade,
-                        no_uf = :no_uf,
-                        sg_uf = :sg_uf,
-                        co_uf = :co_uf,
-                        no_municipio = :no_municipio,
-                        co_municipio = :co_municipio,
-                        nu_ano_censo = :nu_ano_censo,
-                        qt_mat_bas = :qt_mat_bas,
-                        qt_mat_inf = :qt_mat_inf,
-                        qt_mat_fund = :qt_mat_fund,
-                        qt_mat_med = :qt_mat_med,
-                        qt_mat_prof = :qt_mat_prof,
-                        qt_mat_eja = :qt_mat_eja,
-                        qt_mat_esp = :qt_mat_esp
-                    WHERE id = :id AND deleted IS NULL
-            """), {
-                    'id': id,
-                    'co_entidade': data['co_entidade'],
-                    'no_entidade': data['no_entidade'],
-                    'no_uf': data['no_uf'],
-                    'sg_uf': data['sg_uf'],
-                    'co_uf': data['co_uf'],
-                    'no_municipio': data['no_municipio'],
-                    'co_municipio': data['co_municipio'],
-                    'nu_ano_censo': data['nu_ano_censo'],
-                    'qt_mat_bas': data['qt_mat_bas'],
-                    'qt_mat_inf': data['qt_mat_inf'],
-                    'qt_mat_fund': data['qt_mat_fund'],
-                    'qt_mat_med': data['qt_mat_med'],
-                    'qt_mat_prof': data['qt_mat_prof'],
-                    'qt_mat_eja': data['qt_mat_eja'],
-                    'qt_mat_esp': data['qt_mat_esp'],
-                })
+                SET co_entidade = %s, no_entidade = %s, no_uf = %s,
+                    sg_uf = %s, co_uf = %s, no_municipio = %s,
+                    co_municipio = %s, nu_ano_censo = %s,
+                    qt_mat_bas = %s, qt_mat_inf = %s, qt_mat_fund = %s,
+                    qt_mat_med = %s, qt_mat_prof = %s, qt_mat_eja = %s,
+                    qt_mat_esp = %s
+                WHERE id = %s AND deleted IS NULL
+            """,(
+                data['co_entidade'],
+                data['no_entidade'],
+                data['no_uf'],
+                data['sg_uf'],
+                data['co_uf'],
+                data['no_municipio'],
+                data['co_municipio'],
+                data['nu_ano_censo'],
+                data['qt_mat_bas'],
+                data['qt_mat_inf'],
+                data['qt_mat_fund'],
+                data['qt_mat_med'],
+                data['qt_mat_prof'],
+                data['qt_mat_eja'],
+                data['qt_mat_esp'],
+                id
+            ))
 
-            if resultado.rowcount == 0:
+            if cursor.rowcount == 0:
                 return None
 
             connection.commit()
 
-            connection.execute(text("""
+            cursor.execute("""
                 SELECT id, no_entidade, co_entidade, no_uf, sg_uf,
                     co_uf, no_municipio, co_municipio, nu_ano_censo,
                     qt_mat_bas, qt_mat_inf, qt_mat_fund, qt_mat_med,
                     qt_mat_prof, qt_mat_eja, qt_mat_esp, created
                 FROM tb_instituicao_encino
-                WHERE id = :id
-            """), (id,))
+                WHERE id = %s
+            """, (id,))
 
-            return self.row_to_IE(resultado.fetchone())
+            return self.row_to_IE(cursor.fetchone())
 
         except SQLAlchemyError:
             connection.rollback()
