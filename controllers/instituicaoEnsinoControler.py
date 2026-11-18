@@ -9,6 +9,7 @@ from services.instituicaoEnsinoService import InstituicaoEnsinoService
 
 instituicaoEnsinoSchema = InstituicaoEnsinoSchema()
 instituicoesEnsinoSchema = InstituicaoEnsinoSchema(many=True)
+service = InstituicaoEnsinoService()
 
 instituicaoEnsino_bp = Blueprint(
     'instituicaoEnsino',
@@ -17,15 +18,30 @@ instituicaoEnsino_bp = Blueprint(
 )
 
 # TODO: GET
-@instituicaoEnsino_bp.get('/?page=<int:page>')
-def get_all_instituicoes(page):
+@instituicaoEnsino_bp.get('/')
+def get_all_instituicoes():
     try:
-        service = InstituicaoEnsinoService()
-        instituicoes = service.get_all(page)
+        
+        page = request.args.get("page", default=1, type=int)
+        perPage = request.args.get("perPage", default=100, type=int)
 
-        return jsonify(
-            instituicoesEnsinoSchema.dump(instituicoes)
-        ), 200
+        if page < 1 or perPage < 1 or perPage > 500:
+            return jsonify({
+                "erro": "Parâmetros de paginação inválidos"
+            }), 400
+
+        result = service.get_all(page, perPage)
+        
+        instituicoes = instituicoesEnsinoSchema.dump(result)
+
+        return {
+                'data': instituicoes ,
+                'pagination': {
+                    'page': page,
+                    'perPage': perPage
+                }
+                
+            } , 200
 
     except OperationalError:
         logger.exception("Erro ao listar instituições")

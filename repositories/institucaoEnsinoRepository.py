@@ -29,14 +29,14 @@ class InstituicaoEnsinoRepository:
             created=row[16]
         )
 
-    def getInstituicoes(self, page, perPage=100):
+    def getInstituicoes(self, page=1, perPage=100):
         connection = getConnection()
 
         try:
             offset = (page - 1) * perPage
             
             cursor = connection.cursor()
-
+            
             cursor.execute("""
                                 SELECT id, no_entidade, co_entidade, no_uf, sg_uf, co_uf, 
                                 no_municipio, co_municipio, nu_ano_censo, qt_mat_bas, qt_mat_inf, 
@@ -50,6 +50,18 @@ class InstituicaoEnsinoRepository:
             instituicoesEnsino = [self.row_to_IE(row) for row in cursor.fetchall()]
 
             return instituicoesEnsino
+
+            """
+            {
+                "data": [
+                    { "id": 1, "nome": "Item 1" },
+                    { "id": 2, "nome": "Item 2" }
+                ],
+                "pagination": {
+                    "page": 1,
+                    "per_page": 10
+                }
+            """
 
         except psycopg2.Error:
             connection.rollback()
