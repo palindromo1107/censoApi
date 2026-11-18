@@ -9,10 +9,10 @@ class InstituicaoEnsinoService:
         self.schema = InstituicaoEnsinoSchema()
 
     # TODO: GET
-    def get_all(self):
+    def get_all(self, page):
         logger.info("Buscando instituições de ensino")
 
-        return self.repository.getInstituicoes()
+        return self.repository.getInstituicoes(page=page)
 
     # TODO: GET ID
     def get_by_id(self, id):

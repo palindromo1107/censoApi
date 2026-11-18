@@ -17,11 +17,11 @@ instituicaoEnsino_bp = Blueprint(
 )
 
 # TODO: GET
-@instituicaoEnsino_bp.get('/')
-def get_all_instituicoes():
+@instituicaoEnsino_bp.get('/?page=<int:page>')
+def get_all_instituicoes(page):
     try:
         service = InstituicaoEnsinoService()
-        instituicoes = service.get_all()
+        instituicoes = service.get_all(page)
 
         return jsonify(
             instituicoesEnsinoSchema.dump(instituicoes)

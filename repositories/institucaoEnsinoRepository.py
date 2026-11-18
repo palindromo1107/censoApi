@@ -29,7 +29,7 @@ class InstituicaoEnsinoRepository:
             created=row[16]
         )
 
-    def getInstituicoes(self, page=1, perPage=100):
+    def getInstituicoes(self, page, perPage=100):
         connection = getConnection()
 
         try:
@@ -141,16 +141,17 @@ class InstituicaoEnsinoRepository:
                 return None
 
             connection.commit()
+            
+            cursor.execute("""
+                            SELECT id, no_entidade, co_entidade, no_uf, sg_uf, 
+                            co_uf, no_municipio, co_municipio, nu_ano_censo, 
+                            qt_mat_bas, qt_mat_inf, qt_mat_fund, qt_mat_med, 
+                            qt_mat_prof, qt_mat_eja, qt_mat_esp, created
+                            FROM tb_instituicao_encino WHERE id = %s
+                        """, (id,))
 
             return self.row_to_IE(
-                cursor.execute("""
-                    SELECT id, no_entidade, co_entidade, no_uf, sg_uf,
-                        co_uf, no_municipio, co_municipio, nu_ano_censo,
-                        qt_mat_bas, qt_mat_inf, qt_mat_fund, qt_mat_med,
-                        qt_mat_prof, qt_mat_eja, qt_mat_esp, created
-                    FROM tb_instituicao_encino
-                    WHERE id = %s
-                """, (id,)).fetchone()
+                cursor.fetchone()
             )
 
         except psycopg2.Error:
